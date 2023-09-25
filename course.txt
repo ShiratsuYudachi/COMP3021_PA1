@@ -1,0 +1,15 @@
+COMP1000, CSE, CommonCore, false, NA
+PHYS1001, PHYS, CommonCore, false, NA
+ELEC1001, ECE, CommonCore, true, NA
+MATH1001, MATH, CommonCore, false, NA
+BIEN1000, CBE, CommonCore, true, NA
+ISDN1002, ISD, Major, NA, []
+PHYS2011, PHYS, Major, NA, [PHYS1001]
+MATH2011, MATH, CommonCore, true, NA
+COMP2011, CSE, Major, NA, []
+ISDN3000, ISD, Major, NA, [ISDN1002]
+PPOL3010, IPP, CommonCore, false, NA
+ELEC3010, ECE, Major, NA, []
+BIEN3010, CBE, Major, NA, [BIEN1000]
+COMP3021, CSE, Major, NA, [COMP1000 COMP2011]
+PHYS3021, PHYS, Major, NA, [PHYS2011]
