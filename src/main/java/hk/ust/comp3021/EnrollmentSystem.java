@@ -1,6 +1,7 @@
 package hk.ust.comp3021;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.*;
 
 public class EnrollmentSystem {
@@ -20,6 +21,15 @@ public class EnrollmentSystem {
      * to accommodate these guaranteed choices.
      */
     public void enrollFirstRound() {
+        for (Student student : students){
+            try {
+                courses.get(student.preferences.get(0)).enroll(student);
+                courses.get(student.preferences.get(1)).enroll(student);
+            }catch (IndexOutOfBoundsException e) {
+                continue;
+            }
+
+        }
     }
 
     /**
@@ -34,6 +44,7 @@ public class EnrollmentSystem {
      * and finally in the descending order of StudentID.
      */
     public void enrollSecondRound() {
+
     }
 
     /**
@@ -44,6 +55,7 @@ public class EnrollmentSystem {
      * @return the number of TAs required
      */
     public int findNumTA() {
+        return 0;
     }
 
     /**
@@ -54,6 +66,7 @@ public class EnrollmentSystem {
      * @return the number of students
      */
     public int findNumAllSuccess() {
+        return 0;
     }
 
     /**
@@ -64,6 +77,7 @@ public class EnrollmentSystem {
      * @return the list of StudentID
      */
     public List<String> findListNoCommonCore() {
+        return null;
     }
 
     public void parseStudents(String fileName) throws IOException {
@@ -71,12 +85,19 @@ public class EnrollmentSystem {
             String line;
             while ((line = br.readLine()) != null) {
                 // TODO: Task 1
-                String studentID = ;
-                String department = ;
-                int yearOfStudy = ;
-                double CGA = ;
-                List<String> preferences = ;
-                List<String> completedCourses = ;
+                String[] params = line.split(", ");
+
+                String studentID = params[0];
+                String department = params[1];
+                int yearOfStudy = Integer.parseInt(params[2]);
+                double CGA = Double.parseDouble(params[3]);
+
+                List<String> preferences = Arrays.asList(params[4].substring(1,params[4].length()-1).split(" "));
+                if (preferences.get(0).isEmpty()){
+                    preferences = new ArrayList<>();
+                }
+                List<String> completedCourses = Arrays.asList(params[5].substring(1,params[5].length()-1).split(" "));
+                students.add(new Student(studentID,department,yearOfStudy,CGA,preferences,completedCourses));
             }
         }
     }
@@ -86,6 +107,19 @@ public class EnrollmentSystem {
             String line;
             while ((line = br.readLine()) != null) {
                 // TODO: Task 1
+                String[] params = line.split(", ");
+
+                String courseID = params[0];
+                String department = params[1];
+                String CourseType = params[2];
+                if (CourseType.equals("Major")){
+                    List<String> prerequisites = Arrays.asList(params[4].substring(1,params[4].length()-1).split(" "));
+                    courses.put(courseID,new MajorCourse(courseID,department, prerequisites));
+                }else{
+                    boolean isHonorCourse = Boolean.parseBoolean(params[3]);
+                    courses.put(courseID,new CommonCoreCourse(courseID,department, isHonorCourse));
+
+                }
             }
         }
     }
