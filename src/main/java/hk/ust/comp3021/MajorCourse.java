@@ -15,11 +15,22 @@ public class MajorCourse extends Course{
 
     @Override
     public boolean enrollmentCriteria(Student student) {
-        return false;
+        for (String prereq : Prerequisites){
+            if (!student.completedCourses.contains(prereq)) return false;
+        }
+        return true;
     }
+
 
     @Override
     public void enrollWithCondition(Student student) throws CourseFullException {
-
+        if (enrollmentCriteria(student)){
+            if (enrolledStudents.size()>=capacity) throw new CourseFullException();
+            else{
+                enrolledStudents.add(student.studentID);
+            }
+        }
     }
+
+
 }

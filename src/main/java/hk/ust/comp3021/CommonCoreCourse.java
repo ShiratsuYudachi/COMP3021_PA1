@@ -13,11 +13,17 @@ public class CommonCoreCourse extends Course{
     }
     @Override
     public boolean enrollmentCriteria(Student student) {
-        return false;
+        if (!isHonorCourse) return true;
+        else return student.CGA>=3.5;
     }
 
     @Override
     public void enrollWithCondition(Student student) throws CourseFullException {
-
+        if (enrollmentCriteria(student)){
+            if (enrolledStudents.size()>=capacity) throw new CourseFullException();
+            else{
+                enrolledStudents.add(student.studentID);
+            }
+        }
     }
 }

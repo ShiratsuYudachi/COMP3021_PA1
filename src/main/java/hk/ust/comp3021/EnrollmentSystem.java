@@ -20,7 +20,7 @@ public class EnrollmentSystem {
      * The course capacity, initially sets at 10, expands if necessary
      * to accommodate these guaranteed choices.
      */
-    public void enrollFirstRound() {
+    public void enrollFirstRound() {// TODO sort student first?
         for (Student student : students){
             try {
                 courses.get(student.preferences.get(0)).enroll(student);
@@ -43,8 +43,45 @@ public class EnrollmentSystem {
      * filled, first by the priority, then in the descending order of CGA,
      * and finally in the descending order of StudentID.
      */
+    private void tryEnrollCourseOfIndex(Student student, int index){
+        if (index < student.preferences.size()) {
+            Course toenroll = courses.get(student.preferences.get(index));
+            try {
+                if (toenroll != null) {
+                    toenroll.enrollWithCondition(student);
+                }
+            }catch (CourseFullException e){
+                toenroll.waitlist.add(student.studentID);
+            }
+        }
+    }
     public void enrollSecondRound() {
+        int max_pref_size = 0;
+        for (Student student : students){
+            max_pref_size = Math.max(max_pref_size,student.preferences.size());
+        }
 
+        for (int pref_index = 2; pref_index < max_pref_size; pref_index++){
+            List<Student> prioritized_students = new ArrayList<>();
+            for (Student student : students){
+                if (pref_index >= student.preferences.size()) continue;
+                assert student.preferences.get(pref_index)!=null;
+                Course toenroll = courses.get(student.preferences.get(pref_index));
+                if (toenroll == null) continue;
+                if (toenroll instanceof MajorCourse && Objects.equals(student.department, toenroll.department)){
+                    prioritized_students.add(student);
+                }
+            }
+
+            for (Student student : prioritized_students){
+                tryEnrollCourseOfIndex(student, pref_index);
+            }
+
+            for (Student student : students){
+                if (prioritized_students.contains(student)) continue;
+                tryEnrollCourseOfIndex(student,pref_index);
+            }
+        }
     }
 
     /**
@@ -55,7 +92,12 @@ public class EnrollmentSystem {
      * @return the number of TAs required
      */
     public int findNumTA() {
-        return 0;
+        int countTA = 0;
+        for (Course course : courses.values()){
+            int numStudents = course.enrolledStudents.size();
+            countTA += numStudents / 5 + (numStudents % 5 == 0 ? 0 : 1);
+        }
+        return countTA;
     }
 
     /**
@@ -66,7 +108,19 @@ public class EnrollmentSystem {
      * @return the number of students
      */
     public int findNumAllSuccess() {
-        return 0;
+        int countSuccess = 0;
+        for (Student student : students){
+            int isAllSuccess = 1;
+            for (String pref_courseId : student.preferences){
+                if (!courses.get(pref_courseId).enrolledStudents.contains(student.studentID)){
+                    isAllSuccess = 0;
+                    break;
+                }
+            }
+            countSuccess+=isAllSuccess;
+
+        }
+        return countSuccess;
     }
 
     /**
@@ -77,8 +131,30 @@ public class EnrollmentSystem {
      * @return the list of StudentID
      */
     public List<String> findListNoCommonCore() {
-        return null;
+        List<String> noCCCStudents = new ArrayList<>();
+        for (Student student:students){
+            boolean enrolledInCCC = false;
+            List<Course> enrolledCourse = new ArrayList<>();
+
+            for (String courseID : student.preferences){
+                Course course = courses.get(courseID);
+                if (course!=null && course.enrolledStudents.contains(student.studentID)){
+                    enrolledCourse.add(course);
+                }
+            }
+
+            for (Course course : enrolledCourse) {
+                if (course instanceof CommonCoreCourse) {
+                    enrolledInCCC = true;
+                    break;
+                }
+            }
+            if (!enrolledInCCC) noCCCStudents.add(student.studentID);
+
+        }
+        return noCCCStudents;
     }
+    //TODO: what if student want to enroll a course not exists?
 
     public void parseStudents(String fileName) throws IOException {
         try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
@@ -97,6 +173,7 @@ public class EnrollmentSystem {
                     preferences = new ArrayList<>();
                 }
                 List<String> completedCourses = Arrays.asList(params[5].substring(1,params[5].length()-1).split(" "));
+                if (completedCourses.get(0).isEmpty()) completedCourses = new ArrayList<>();
                 students.add(new Student(studentID,department,yearOfStudy,CGA,preferences,completedCourses));
             }
         }
@@ -114,6 +191,7 @@ public class EnrollmentSystem {
                 String CourseType = params[2];
                 if (CourseType.equals("Major")){
                     List<String> prerequisites = Arrays.asList(params[4].substring(1,params[4].length()-1).split(" "));
+                    if (prerequisites.size() == 1 && prerequisites.get(0).isEmpty()) prerequisites = new ArrayList<>();
                     courses.put(courseID,new MajorCourse(courseID,department, prerequisites));
                 }else{
                     boolean isHonorCourse = Boolean.parseBoolean(params[3]);
