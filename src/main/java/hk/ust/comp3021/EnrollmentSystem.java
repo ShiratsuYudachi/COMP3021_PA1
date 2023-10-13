@@ -23,8 +23,10 @@ public class EnrollmentSystem {
     public void enrollFirstRound() {// TODO sort student first?
         for (Student student : students){
             try {
-                courses.get(student.preferences.get(0)).enroll(student);
-                courses.get(student.preferences.get(1)).enroll(student);
+                Course course1 = courses.get(student.preferences.get(0));
+                if (course1!=null) course1.enroll(student);
+                Course course2 = courses.get(student.preferences.get(1));
+                if (course2!=null) course2.enroll(student);
             }catch (IndexOutOfBoundsException e) {
                 continue;
             }
@@ -112,7 +114,8 @@ public class EnrollmentSystem {
         for (Student student : students){
             int isAllSuccess = 1;
             for (String pref_courseId : student.preferences){
-                if (!courses.get(pref_courseId).enrolledStudents.contains(student.studentID)){
+                Course course = courses.get(pref_courseId);
+                if (!(course!=null && course.enrolledStudents.contains(student.studentID))){
                     isAllSuccess = 0;
                     break;
                 }
